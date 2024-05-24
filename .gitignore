@@ -1,0 +1,11 @@
+# .gitignore
+
+/fetch
+/source
+/tokenizes
+/trans
+/mainreplace*
+/output
+
+*.json
+*.js
