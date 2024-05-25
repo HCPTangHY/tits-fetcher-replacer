@@ -21,9 +21,9 @@ def replace_js_file(zip_filename: str, js_filename: str, js_content: str, transl
             data = json.load(fp)
         logger.info(f"Tokenized {zip_filename} read successfully!")
 
-    idx = 0
+    idx = 1
     delta_index = 0
-    target_js = js_filename
+    target_js = js_content
     for d in data:
         if d["type"] not in {"String", "Template"}:
             continue
@@ -32,7 +32,7 @@ def replace_js_file(zip_filename: str, js_filename: str, js_content: str, transl
         translation = translation or d["value"]
         target_js = f"{target_js[:d['range'][0]-delta_index]}{translation}{target_js[d['range'][1]-delta_index:]}"
         delta_index += len(d['value']) - len(translation)
-        logger.info(f"replacing {idx+1}/{len(translation_files[zip_filename])}")
+        if idx%1000==0:logger.info(f"replacing {idx+1}/{len(translation_files[zip_filename])}")
         idx += 1
     return target_js
 

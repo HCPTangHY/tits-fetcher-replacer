@@ -6,6 +6,7 @@
 /trans
 /mainreplace*
 /output
+/newtokenizes
 
 *.json
 *.js
