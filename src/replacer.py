@@ -9,39 +9,48 @@ from .log import logger
 
 
 def replace_js_file(zip_filename: str, js_filename: str, js_content: str, translation_files: dict):
-    if not (DIR_TOKENIZES / zip_filename).exists():
+    if not (DIR_NEWTOKENIZES / zip_filename).exists():
         tokens = esprima.tokenize(js_content, {'range': True})
         data = json5.loads(tokens.__str__().replace("False", "false").replace("True", "true"))
-        with open(DIR_TOKENIZES / zip_filename, "w", encoding="utf-8") as fp:
+        with open(DIR_NEWTOKENIZES / zip_filename, "w", encoding="utf-8") as fp:
             json.dump(data, fp, ensure_ascii=False)
         logger.info(f"Tokenized {zip_filename} written successfully!")
 
     else:
-        with open(DIR_TOKENIZES / zip_filename, "r", encoding="utf-8") as fp:
+        with open(DIR_NEWTOKENIZES / zip_filename, "r", encoding="utf-8") as fp:
             data = json.load(fp)
         logger.info(f"Tokenized {zip_filename} read successfully!")
 
     idx = 1
     delta_index = 0
-    target_js = js_content
+    target_js_parts = []
+    last_idx = 0
+
     for d in data:
         if d["type"] not in {"String", "Template"}:
             continue
 
         translation = translation_files[zip_filename][f"{js_filename}_{idx}"]
-        translation = translation or d["value"]
-        target_js = f"{target_js[:d['range'][0]-delta_index]}{translation}{target_js[d['range'][1]-delta_index:]}"
-        delta_index += len(d['value']) - len(translation)
-        if idx%1000==0:logger.info(f"replacing {idx+1}/{len(translation_files[zip_filename])}")
+        if not translation=="\"\"":
+            translation = f"\"{translation}\""
+        elif translation=="":translation = d['value']
+        target_js_parts.append(js_content[last_idx:d['range'][0]])
+        target_js_parts.append(translation)
+        delta_index += (len(d['range']) - len(translation))
+        last_idx = d['range'][1]
+        # if idx%1000==0:logger.info(f"replacing {idx+1}/{len(translation_files[zip_filename])}")
         idx += 1
-    return target_js
+
+    target_js_parts.append(js_content[last_idx:])
+
+    return ''.join(target_js_parts)
 
 
 def replace_main():
     if DIR_OUTPUT.exists():
         shutil.rmtree(DIR_OUTPUT)
     os.makedirs(DIR_OUTPUT, exist_ok=True)
-    os.makedirs(DIR_TOKENIZES, exist_ok=True)
+    os.makedirs(DIR_NEWTOKENIZES, exist_ok=True)
 
     translation_files = {}
     for file in os.listdir(DIR_TRANS):

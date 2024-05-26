@@ -1,3 +1,4 @@
-from src import token_sift
+from src import replacer,join_main
 
-token_sift.token_sift()
+join_main.join_main()
+replacer.replace_main()
