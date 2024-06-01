@@ -29,11 +29,17 @@ def replace_js_file(zip_filename: str, js_filename: str, js_content: str, transl
     for d in data:
         if d["type"] not in {"String", "Template"}:
             continue
-
-        translation = translation_files[zip_filename][f"{js_filename}_{idx}"]
-        if not translation=="\"\"":
-            translation = f"\"{translation}\""
-        elif translation=="":translation = d['value']
+        
+        if f"{js_filename}_{idx}" in translation_files[zip_filename]:
+            translation = translation_files[zip_filename][f"{js_filename}_{idx}"]
+        else:
+            translation=""
+            logger.warning(f"{js_filename}_{idx} not exist!")
+        if translation=="":
+            translation = d['value']
+        else:
+            if not translation=="\"\"":
+                translation = f"\"{translation}\""
         target_js_parts.append(js_content[last_idx:d['range'][0]])
         target_js_parts.append(translation)
         delta_index += (len(d['range']) - len(translation))
